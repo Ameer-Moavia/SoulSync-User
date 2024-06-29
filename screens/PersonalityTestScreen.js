@@ -19,7 +19,7 @@ const PersonalityTestScreen = () => {
 
   const submitData = async (data) => {
     try {
-      const response = await fetch('http://192.168.187.204:5000/predict', {
+      const response = await fetch('http://10.135.16.186:5000/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,7 +34,8 @@ const PersonalityTestScreen = () => {
         // Navigate to PredictionScreen with parameters
         navigation.navigate('PredictionScreen', {
           personalityType: responseData[0],
-          maxProbability: responseData[responseData.length - 1]
+          maxProbability: responseData[responseData.length - 1],
+          trait:responseData[responseData.length - 2],
         });
       } else {
         // Server returned an error status code

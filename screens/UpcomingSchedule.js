@@ -1,98 +1,98 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Colors, Fonts, Sizes } from '../constants/styles';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import Material Community Icons
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firestore } from './firebase';
 import { database } from './firebase';
-import { ref as databaseRef, get,onValue,off } from 'firebase/database';
-const UpcomingSchedule = () => {  
-  const [Appointments, setAppointments] = useState([]);
+import { ref as databaseRef, onValue, off } from 'firebase/database';
 
+const UpcomingSchedule = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [userEmail, setUserEmail] = useState("");
+  const navigation = useNavigation(); // Get navigation object
 
-  const Message=(data)=>{
-
-    const receiver = {
-      id: data.docid, // Replace with the actual current user ID
-      name: data.doctorName,
-      photo: data.doctorPhoto,
-  };
-
-    const  currentUser={
-      name: data.patientName,
-      photo: data.patientPhoto,
-      id: data.patientID,
-  }
-  navigation.navigate('Message', { receiver,currentUser});
-    console.log(data)
-  }
-  const fetchAppoinmentsData = () => {
-
-    try{
-
-      const AppointmentsRef =  databaseRef(database, 'Appointments'); // Reference to 'doctors' node in database
-
-    // Listen for changes to the data at the doctorsRef
-    onValue(AppointmentsRef, (snapshot) => {
-      const data = snapshot.val(); // Extract data from snapshot
-      if (data) {
-        // Convert object to array of doctors and set state
-        const AppointmentsArray = Object.values(data);
-        setAppointments(AppointmentsArray);
+  useEffect(() => {
+    const getUserEmail = async () => {
+      try {
+        const user = await AsyncStorage.getItem('emailS');
+        const storedUserEmail = await AsyncStorage.getItem(`userEmail_${user}`);
+        if (storedUserEmail) {
+          setUserEmail(storedUserEmail.replace(/[\[\]"]+/g, ''));
+        }
+      } catch (error) {
+        console.error('Error retrieving user email from AsyncStorage:', error);
       }
-    });
-    }catch(err){
+    };
 
-      console.log(err)
+    getUserEmail();
+  }, []);
+
+  const fetchAppointmentsData = () => {
+    try {
+      const appointmentsRef = databaseRef(database, 'Appointments');
+      onValue(appointmentsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const appointmentsArray = Object.values(data);
+          const filteredAppointments = appointmentsArray.filter(appointment => appointment.user === userEmail);
+          setAppointments(filteredAppointments);
+        }
+      });
+    } catch (err) {
+      console.log(err);
     }
   };
 
   useEffect(() => {
-    fetchAppoinmentsData();   
-  }, []);
-
-
- 
-  
-  const navigation = useNavigation(); // Get navigation object
-
-  const navigateToMessageScreen = (item) => {
-  const  doc={
-        sourceName: item.doctor.name,
-        sourcePhoto: item.doctor.photo,
-        sourceId: item.doctor.id,
+    if (userEmail) {
+      fetchAppointmentsData();
     }
-    navigation.navigate('Message', { receiver: doc });
+  }, [userEmail]);
+
+  const Message = (data) => {
+    const receiver = {
+      id: data.docid,
+      name: data.doctorName,
+      photo: data.doctorPhoto,
+    };
+
+    const currentUser = {
+      name: data.patientName,
+      photo: data.patientPhoto,
+      id: data.patientID,
+    };
+
+    navigation.navigate('Message', { receiver, currentUser });
+    console.log(data);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Upcoming Schedule</Text>
-      {Appointments.map((Appointment, index) => (
-          <View key={index} style={styles.appoint}>
-            <Image
-              source={{ uri: Appointment.doctorPhoto }}
-              style={styles.profileImageAppoint}
-            />
-            <View style={styles.infoContainer}>
-              <Text style={styles.nameAppoint}>{Appointment.doctorName}</Text>
-              <View style={styles.row}>
-                <MaterialIcons name="phone" size={16} color={Colors.primaryColor} />
-                <Text style={styles.phone}>{Appointment.doctorPhone}  .</Text>
-                <Text style={styles.status}>{Appointment.status}</Text>
-                {Appointment.status === 'Approved' && (
-                <TouchableOpacity style={styles.messageButton} onPress={()=>Message(Appointment)}>
+      {appointments.map((appointment, index) => (
+        <View key={index} style={styles.appoint}>
+          <Image
+            source={{ uri: appointment.doctorPhoto }}
+            style={styles.profileImageAppoint}
+          />
+          <View style={styles.infoContainer}>
+            <Text style={styles.nameAppoint}>{appointment.doctorName}</Text>
+            <View style={styles.row}>
+              <MaterialIcons name="phone" size={16} color={Colors.primaryColor} />
+              <Text style={styles.phone}>{appointment.doctorPhone}  .</Text>
+              <Text style={styles.status}>{appointment.status}</Text>
+              {appointment.status === 'Approved' && (
+                <TouchableOpacity style={styles.messageButton} onPress={() => Message(appointment)}>
                   <MaterialIcons name="message" size={26} color={Colors.primaryColor} />
                 </TouchableOpacity>
               )}
-              </View>
-              <View style={styles.divider} />
-              <Text style={styles.date}>{Appointment.date} at {Appointment.time}</Text>
             </View>
+            <View style={styles.divider} />
+            <Text style={styles.date}>{appointment.date} at {appointment.time}</Text>
           </View>
-        ))}
+        </View>
+      ))}
     </View>
   );
 };
@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.whiteColor,
     padding: Sizes.fixPadding,
-    position: 'relative', // Ensure the container is relative for absolute positioning of the message icon
   },
   title: {
     ...Fonts.primaryColor20Bold,
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
   },
   nameAppoint: {
     ...Fonts.blackColor16Medium,
-    color:Colors.primaryColor, // dark teal
+    color: Colors.primaryColor, // dark teal
   },
   row: {
     flexDirection: 'row',
@@ -143,7 +142,6 @@ const styles = StyleSheet.create({
   phone: {
     marginLeft: 5,
     ...Fonts.blackColor14Regular,
-
   },
   status: {
     marginLeft: 10,
@@ -156,12 +154,12 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   date: {
-    ...Fonts.blackColor14Regular
+    ...Fonts.blackColor14Regular,
   },
-  messageButton:{
-    position:"absolute",
-    right:10,
-  }
+  messageButton: {
+    position: "absolute",
+    right: 10,
+  },
 });
 
 export default UpcomingSchedule;

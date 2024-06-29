@@ -15,10 +15,6 @@ import {Snackbar} from 'react-native-paper';
 import MyStatusBar from '../components/myStatusBar';
 
 
-
-
-
-
 const NotificationsScreen = ({navigation}) => {
   const [showSnackBar, setShowSnackBar] = useState(false);
   const [listData, setListData] = useState([]);

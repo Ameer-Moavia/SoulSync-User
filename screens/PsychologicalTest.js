@@ -6,6 +6,11 @@ import MyStatusBar from "../components/myStatusBar";
 const categories = [
   { id: '1', title: 'Becks Depression Inventory' , onPress:'BDI', iconName: 'meh'},
   { id: '2', title: 'Becks Anxiety Inventory' , onPress:'BAI', iconName: 'meh'},
+  { id: '3', title: 'Burns Procrastination Test ' , onPress:'BurnsProcrastinationTest', iconName: 'meh'},
+  { id: '4', title: 'Anger Control Test ' , onPress:'AngerControlTest', iconName: 'meh'},
+  { id: '5', title: 'Panic Disorder Test' , onPress:'PanicDisorderTest', iconName: 'meh'},
+  { id: '6', title: 'Severity of Posttraumatic Stress PTSD' , onPress:'PTSD', iconName: 'meh'},
+  { id: '7', title: 'Epworth Sleeplessness Scale' , onPress:'EpworthSleepinessScale', iconName: 'meh'},
 ];
 
 const PsychologicalTest = ({ navigation }) => {

@@ -6,9 +6,12 @@ import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons'; // Import FontAwesome5 icon from expo/vector-icons
 import CircularProgress from 'react-native-circular-progress-indicator';
 import { firestore } from './firebase';
-import { collection, getDocs, query, where, updateDoc, arrayUnion, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, updateDoc, doc } from 'firebase/firestore';
+import { getDatabase, ref, set, push, child, get } from 'firebase/database';
+
 
 const BAI = () => {
+  
   const navigation = useNavigation();
   const questions = [
     {
@@ -202,26 +205,18 @@ const BAI = () => {
     }
   ];
 
-
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
-
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    // Retrieve user's email from AsyncStorage when component mounts
     const getUserEmail = async () => {
       try {
         const user = await AsyncStorage.getItem('emailS');
-        const storedUserEmail = await AsyncStorage.getItem(`userEmail_${user}`).then({})
-
-        console.log('Stored user email:', storedUserEmail);
-
-        // Parse the string to JSON
-
-        setUserEmail(storedUserEmail);
-        console.log(userEmail)
-
+        const storedUserEmail = await AsyncStorage.getItem(`userEmail_${user}`);
+        if (storedUserEmail) {
+          setUserEmail(storedUserEmail.replace(/[\[\]"]+/g, ''));
+        }
       } catch (error) {
         console.error('Error retrieving user email from AsyncStorage:', error);
       }
@@ -229,59 +224,36 @@ const BAI = () => {
 
     getUserEmail();
   }, []);
-  // Log userEmail after it has been set
-  useEffect(() => {
-    console.log('User email:', userEmail);
-  }, [userEmail]);
-
 
   useEffect(() => {
-    // Check if all questions are answered
     if (currentQuestionIndex === questions.length) {
-      // Upload the score to Firestore
-      uploadScoreToFirestore(userEmail);
+      uploadScoreToDatabase(userEmail);
     }
-  }, [currentQuestionIndex, questions, userEmail]);
-  
+  }, [currentQuestionIndex, questions.length, userEmail]);
+
   const handleResponseSelection = (optionScore) => {
     setTotalScore(totalScore + optionScore);
     setCurrentQuestionIndex(currentQuestionIndex + 1);
   };
-  const uploadScoreToFirestore = async (userEmail) => {
-    const userDataCollection = collection(firestore, 'userdata');
 
-    userEmail = userEmail.replace(/[\[\]"]+/g, '');
-    console.log(userEmail)
-
-    try {
-      const querySnapshot = await getDocs(
-        query(userDataCollection, where('emailId', '==', userEmail)),
-      );
-
-      const docId = querySnapshot.docs[0].id;
-      console.log(docId)
-      const userDocRef = doc(userDataCollection, docId);
-
-      // Get the current document data
-      const docData = querySnapshot.docs[0].data();
-
-      // Get the current BAI array or initialize it if it doesn't exist
-      const currentBAI = docData.BAI || [];
-
-      // Add the new score to the BAI array
-      const newBAI = [...currentBAI, { score: totalScore, date: new Date() }];
-
-      // Update Firestore document with the new BAI array
-      await updateDoc(userDocRef, {
-        BAI: newBAI
-      });
-
-      console.log('Total score uploaded to Firestore successfully.');
-    } catch (error) {
-      console.error('Error uploading total score to Firestore:', error);
-    }
+  const sanitizeEmail = (email) => {
+    return email.replace(/\./g, '_');
   };
 
+  const uploadScoreToDatabase = async (userEmail) => {
+    const db = getDatabase();
+    const sanitizedEmail = sanitizeEmail(userEmail);
+    const userRef = ref(db, `tests/${sanitizedEmail}/BAI`);
+    try {
+      const newTestRef = push(userRef);
+      await set(newTestRef, {
+        score: totalScore,
+        date: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error uploading total score to Realtime Database:', error);
+    }
+  };
 
   const interpretScore = () => {
     let advice = '';
@@ -295,7 +267,6 @@ const BAI = () => {
       advice = 'Invalid score';
     }
 
-    // Suggestions based on advice
     switch (advice) {
       case 'Look for patterns or times when you tend to feel the symptoms you have circled. Persistent and high anxiety is not a sign of personal weakness or failure. It is, however, something that needs to be proactively treated or there could be significant impacts to you mentally and physically. You may want to consult a counselor if the feelings persist.':
         return (
@@ -338,6 +309,28 @@ const BAI = () => {
     }
   };
 
+  const getProgressColor = () => {
+    if (totalScore >= 0 && totalScore <= 21) {
+      return 'green';
+    } else if (totalScore >= 22 && totalScore <= 35) {
+      return 'orange';
+    } else if (totalScore >= 36) {
+      return 'red';
+    } else {
+      return 'gray';
+    }
+  };
+  const getSeverity = () => {
+    if (totalScore >= 0 && totalScore <= 21) {
+      return 'Low';
+    } else if (totalScore >= 22 && totalScore <= 35) {
+      return 'Moderate';
+    } else if (totalScore >= 36) {
+      return 'Extreme';
+    } else {
+      return 'No';
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -373,8 +366,8 @@ const BAI = () => {
               activeStrokeWidth={15}
               inActiveStrokeWidth={15}
               inActiveStrokeOpacity={0.5}
-              activeStrokeColor={Colors.primaryColor}
-              activeStrokeSecondaryColor={Colors.primaryColor}
+              activeStrokeColor={getProgressColor()}
+              activeStrokeSecondaryColor={getProgressColor()}
               titleFontSize={15}
               backgroundStrokeColor="transparent"
               inActiveStrokeColor={Colors.lightGray}
@@ -385,6 +378,7 @@ const BAI = () => {
                 width: 4,
               }}
             />
+          <Text style={{...Fonts.blackColor16Medium,color: getProgressColor(),marginTop: Sizes.fixPadding,alignSelf:"center"}}>{getSeverity()} Anxiety</Text>
           </View>
           {interpretScore()}
           <View>

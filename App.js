@@ -23,7 +23,6 @@ import VideoList from "./screens/VideoList";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PsychologicalTest from "./screens/PsychologicalTest";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegiterScreen";
 import DoctorDetailsScreen from "./screens/DoctorDetailsScreen";
@@ -33,6 +32,19 @@ import Report from "./screens/ReportProblem";
 import TestReports from "./screens/TestReports";
 import UpcomingSchedule from "./screens/UpcomingSchedule";
 import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
+import BurnsProcrastinationTest from "./screens/BurnsProcrastinationTest";
+import ProcrastinationSteps from "./screens/ProcrastinationSteps";
+import AngerControlTest from "./screens/AngerControlTest";
+import PanicDisorderTest from "./screens/PanicDisorderTest";
+import PTSD from "./screens/PTSD";
+import EpworthSleepinessScale from "./screens/EpworthSleepinessScale";
+import AngerControl from "./screens/AngerControl";
+import Anxiety from "./screens/Anxiety";
+import Depression from "./screens/Depression"; 
+import PanicAttack from "./screens/PanicAttack";
+import Procrastination from "./screens/Procrastination";
+import Stress from "./screens/Stress";
+
 
 const App = () => {
   const [hideSplashScreen, setHideSplashScreen] = React.useState(true);
@@ -161,6 +173,56 @@ const App = () => {
               name="Settings"
               component={Settings}
             />
+            <Stack.Screen
+              name="BurnsProcrastinationTest"
+              component={BurnsProcrastinationTest}
+            />
+            <Stack.Screen
+              name="ProcrastinationSteps"
+              component={ProcrastinationSteps}
+            />
+            <Stack.Screen
+              name="AngerControlTest"
+              component={AngerControlTest}
+            />
+            <Stack.Screen
+              name="PanicDisorderTest"
+              component={PanicDisorderTest}
+            />
+            <Stack.Screen
+              name="PTSD"
+              component={PTSD}
+            />
+            
+            <Stack.Screen
+              name="EpworthSleepinessScale"
+              component={EpworthSleepinessScale}
+            />
+            <Stack.Screen
+        name="AngerControl"
+        component={AngerControl}
+      />
+      <Stack.Screen
+        name="Anxiety"
+        component={Anxiety}
+      />
+      <Stack.Screen
+        name="Depression"
+        component={Depression}
+      />
+      <Stack.Screen
+        name="PanicAttack"
+        component={PanicAttack}
+      />
+      <Stack.Screen
+        name="Procrastination"
+        component={Procrastination}
+      />
+      <Stack.Screen
+        name="Stress"
+        component={Stress}
+      />
+
           </Stack.Navigator>
         ) : null}
       </NavigationContainer>

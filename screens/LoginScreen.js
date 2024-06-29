@@ -254,8 +254,7 @@ const LoginScreen = ({ navigation }) => {
                             {passwordInfo()}
                             {forgetPasswordText()}
                             {loginButton()}
-                            {orOptions()}
-                        </ScrollView>
+                            </ScrollView>
                         {dontAccountInfo()}
                     </View>
                     {exitInfo()}

@@ -7,9 +7,11 @@ import CircularProgress from 'react-native-circular-progress-indicator';
 import { firestore } from './firebase';
 import { collection, getDocs, query, where, updateDoc, arrayUnion, doc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDatabase, ref, set, push, child, get } from 'firebase/database';
+
 const BDI = () => {
-  const navigation = useNavigation();
-const questions = [
+  
+  const questions = [
     {
       description: "1. Sadness",
       options: [
@@ -200,23 +202,19 @@ const questions = [
       ]
     }
   ];
+  const navigation = useNavigation();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    // Retrieve user's email from AsyncStorage when component mounts
     const getUserEmail = async () => {
       try {
         const user = await AsyncStorage.getItem('emailS');
-        const storedUserEmail = await AsyncStorage.getItem(`userEmail_${user}`).then({})
-
-        // Check if the retrieved email is not null
-        console.log('Stored user email:', storedUserEmail);
-
-        // Parse the string to JSON
-
-        setUserEmail(storedUserEmail);
-        console.log(userEmail)
-
+        const storedUserEmail = await AsyncStorage.getItem(`userEmail_${user}`);
+        if (storedUserEmail) {
+          setUserEmail(storedUserEmail.replace(/[\[\]"]+/g, ''));
+        }
       } catch (error) {
         console.error('Error retrieving user email from AsyncStorage:', error);
       }
@@ -224,63 +222,71 @@ const questions = [
 
     getUserEmail();
   }, []);
-  // Log userEmail after it has been set
-  useEffect(() => {
-    console.log('User email:', userEmail);
-  }, [userEmail]);
-
 
   useEffect(() => {
-    // Check if all questions are answered
     if (currentQuestionIndex === questions.length) {
-      // Upload the score to Firestore
-      uploadScoreToFirestore(userEmail);
+      uploadScoreToDatabase(userEmail);
     }
-  }, [currentQuestionIndex, questions, userEmail]);
-  
-
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [totalScore, setTotalScore] = useState(0);
+  }, [currentQuestionIndex, questions.length, userEmail]);
 
   const handleResponseSelection = (optionScore) => {
     setTotalScore(totalScore + optionScore);
     setCurrentQuestionIndex(currentQuestionIndex + 1);
   };
-  const uploadScoreToFirestore = async (userEmail) => {
-    const userDataCollection = collection(firestore, 'userdata');
 
-    userEmail = userEmail.replace(/[\[\]"]+/g, '');
-    console.log(userEmail)
+  const sanitizeEmail = (email) => {
+    return email.replace(/\./g, '_');
+  };
 
+  const uploadScoreToDatabase = async (userEmail) => {
+    const db = getDatabase();
+    const sanitizedEmail = sanitizeEmail(userEmail);
+    const userRef = ref(db, `tests/${sanitizedEmail}/BDI`);
     try {
-      const querySnapshot = await getDocs(
-        query(userDataCollection, where('emailId', '==', userEmail)),
-      );
-
-      const docId = querySnapshot.docs[0].id;
-      console.log(docId)
-      const userDocRef = doc(userDataCollection, docId);
-
-      // Get the current document data
-      const docData = querySnapshot.docs[0].data();
-
-      // Get the current BAI array or initialize it if it doesn't exist
-      const currentBDI = docData.BDI || [];
-
-      // Add the new score to the BAI array
-      const newBDI = [...currentBDI, { score: totalScore, date: new Date() }];
-
-      // Update Firestore document with the new BAI array
-      await updateDoc(userDocRef, {
-        BDI: newBDI
+      const newTestRef = push(userRef);
+      await set(newTestRef, {
+        score: totalScore,
+        date: new Date().toISOString()
       });
-
-      console.log('Total score uploaded to Firestore successfully.');
     } catch (error) {
-      console.error('Error uploading total score to Firestore:', error);
+      console.error('Error uploading total score to Realtime Database:', error);
     }
   };
 
+  const getProgressColor = () => {
+    if (totalScore >= 0 && totalScore <= 10) {
+      return '#00FF00'; // Green for "Everything is Normal"
+    } else if (totalScore >= 11 && totalScore <= 16) {
+      return '#FFFF00'; // Yellow for "Mild mood disturbance"
+    } else if (totalScore >= 17 && totalScore <= 20) {
+      return '#FFA500'; // Orange for "Borderline clinical depression"
+    } else if (totalScore >= 21 && totalScore <= 30) {
+      return '#FF4500'; // Orange-Red for "Moderate depression"
+    } else if (totalScore >= 31 && totalScore <= 40) {
+      return '#FF0000'; // Red for "Severe depression"
+    } else if (totalScore > 40) {
+      return '#8B0000'; // Dark Red for "Extreme depression"
+    } else {
+      return '#808080'; // Gray for "Invalid score"
+    }
+  };
+  const getSeverity = () => {
+    if (totalScore >= 0 && totalScore <= 10) {
+      return 'Everything is Normal';
+    } else if (totalScore >= 11 && totalScore <= 16) {
+      return 'Mild mood disturbance';
+    } else if (totalScore >= 17 && totalScore <= 20) {
+      return 'Borderline clinical depression';
+    } else if (totalScore >= 21 && totalScore <= 30) {
+      return 'Moderate depression';
+    } else if (totalScore >= 31 && totalScore <= 40) {
+      return 'Severe depression';
+    } else if (totalScore > 40) {
+      return  'Extreme depression';
+    } else {
+      return 'Invalid score';
+    }
+  };
 
   const interpretScore = () => {
     let advice = '';
@@ -300,6 +306,7 @@ const questions = [
       advice = 'Invalid score';
     }
 
+    
     // Suggestions based on advice
     switch (advice) {
       case 'Extreme depression':
@@ -396,8 +403,8 @@ const questions = [
               activeStrokeWidth={15}
               inActiveStrokeWidth={15}
               inActiveStrokeOpacity={0.5}
-              activeStrokeColor={Colors.primaryColor}
-              activeStrokeSecondaryColor={Colors.primaryColor}
+              activeStrokeColor={getProgressColor()}
+              activeStrokeSecondaryColor={getProgressColor()}
               titleFontSize={15}
               backgroundStrokeColor="transparent"
               inActiveStrokeColor={Colors.lightGray}
@@ -408,6 +415,7 @@ const questions = [
                 width: 4,
               }}
             />
+              <Text style={{...Fonts.blackColor16Medium,color: getProgressColor(),marginTop: Sizes.fixPadding,alignSelf:"center"}}>{getSeverity()}</Text>
           </View>
           {interpretScore()}
           <View>

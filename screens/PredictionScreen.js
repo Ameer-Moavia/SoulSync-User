@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image,TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Colors, Fonts, Sizes } from '../constants/styles';
 import { useNavigation } from '@react-navigation/native';
 import CircularProgress from 'react-native-circular-progress-indicator';
@@ -23,7 +23,6 @@ const personalityDescriptions = {
     ESTP: "ESTP (Entrepreneur) is a personality type with the Extraverted, Observant, Thinking, and Prospecting traits. They tend to be energetic and action-oriented, deftly navigating whatever is in front of them. They love uncovering life’s opportunities, whether socializing with others or in more personal pursuits.",
     ESFP: "ESFP (Entertainer) is a personality type with the Extraverted, Observant, Feeling, and Prospecting traits. These people love vibrant experiences, engaging in life eagerly and taking pleasure in discovering the unknown. They can be very social, often encouraging others into shared activities.",
 };
-
 // Object mapping personality types to images
 const personalityImages = {
     INTJ: require('../assets/architect.png'),
@@ -52,13 +51,57 @@ const traitColors = {
     Judging: '#FF4500', // Orange-red color for Judging trait
     Extraverted: '#00BFFF', // Deep sky blue color for Extraverted trait
     Prospecting: '#FFD700', // Gold color for Prospecting trait
-    Feeling: '#9932CC', // Dark orchid color for Feeling trait
+    Feeling: 'green', // Dark orchid color for Feeling trait
     Observant: '#9932CC', // Dark orchid color for Feeling trait
 };
 
+// Function to map short trait names to full trait names based on personality type
+const mapTraits = (personalityType, traits) => {
+    const traitMapping = {
+        I: 'Introverted',
+        E: 'Extraverted',
+        N: 'Intuitive',
+        S: 'Observant',
+        T: 'Thinking',
+        F: 'Feeling',
+        J: 'Judging',
+        P: 'Prospecting'
+    };
+
+    return traits.map((trait, index) => {
+        const traitKey = Object.keys(trait)[0];
+        const traitValue = trait[traitKey];
+
+        // Determine the correct trait name based on the position in the personality type
+        let traitName = '';
+        switch (index) {
+            case 0:
+                traitName = traitMapping[personalityType[0]]; // I or E
+                break;
+            case 1:
+                traitName = traitMapping[personalityType[1]]; // N or S
+                break;
+            case 2:
+                traitName = traitMapping[personalityType[2]]; // F or T
+                break;
+            case 3:
+                traitName = traitMapping[personalityType[3]]; // J or P
+                break;
+            default:
+                break;
+        }
+
+        return { [traitName]: traitValue };
+    });
+};
+
+
 const PredictionScreen = ({ route }) => {
     const navigation = useNavigation();
-    const { personalityType, maxProbability } = route.params;
+    const { personalityType, maxProbability, trait } = route.params;
+
+    // Map the traits to their full names
+    const mappedTraits = mapTraits(personalityType, trait);
 
     // Calculate the percentage value for the prediction score
     const predictionScore = Math.round(maxProbability);
@@ -87,7 +130,7 @@ const PredictionScreen = ({ route }) => {
                 <View style={styles.circleContainer}>
                     <CircularProgress
                         value={predictionScore}
-                        radius={105} // Increase the radius by 2x
+                        radius={90} // Increase the radius by 2x
                         maxValue={100}
                         strokeWidth={8}
                         activeStrokeWidth={15}
@@ -109,13 +152,46 @@ const PredictionScreen = ({ route }) => {
                         <Text style={styles.progressText}>{predictionScore}%</Text>
                     </CircularProgress>
                 </View>
+                <View style={{ flexDirection: "row", width: "100%", justifyContent: "space-between" }}>
+
+                    {mappedTraits.map((trait, index) => {
+                        const traitName = Object.keys(trait)[0];
+                        const traitValue = Math.round(trait[traitName] * 100);
+                        const traitColor = traitColors[traitName] || Colors.primaryColor;
+                        return (
+                            <View key={index} style={styles.traitContainer}>
+
+                                <CircularProgress
+                                    value={traitValue}
+                                    radius={40} // Smaller radius for trait progress bars
+                                    maxValue={100}
+                                    strokeWidth={6}
+                                    activeStrokeWidth={8}
+                                    inActiveStrokeWidth={8}
+                                    inActiveStrokeOpacity={0.5}
+                                    activeStrokeColor={traitColor}
+                                    backgroundStrokeColor="transparent"
+                                    inActiveStrokeColor={Colors.lightGray}
+                                    duration={3000}
+                                    valueSuffix='%'
+                                    dashedStrokeConfig={{
+                                        count: 50,
+                                        width: 2,
+                                    }}
+                                >
+                                </CircularProgress>
+                                <Text style={{...Fonts.blackColor16Medium,color: traitColor,marginBottom: Sizes.fixPadding / 2,}}>{traitName}</Text>
+                            </View>
+                        );
+                    })}
+                </View>
                 <Text style={styles.personalityText}>{personalityType}</Text>
                 <Image source={personalityImages[personalityType]} style={styles.personalityImage} />
                 <Text style={styles.descriptionText}>{applyTraitColors(description)}</Text>
             </View>
-            <TouchableOpacity style={styles.submitButton} onPress={()=>{navigation.navigate('Home')}}>
-          <Text style={styles.submitButtonText}>Close</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.submitButton} onPress={() => { navigation.navigate('Home') }}>
+                <Text style={styles.submitButtonText}>Close</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -126,11 +202,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'white',
         paddingHorizontal: Sizes.fixPadding,
-        paddingTop: Sizes.fixPadding * 2,
+        paddingTop: Sizes.fixPadding,
     },
     headerText: {
         ...Fonts.primaryColor20Bold,
-        marginBottom: Sizes.fixPadding + 10,
+        marginBottom: 5,
         fontSize: 25,
     },
     resultContainer: {
@@ -150,10 +226,10 @@ const styles = StyleSheet.create({
         fontSize: 30,
     },
     personalityImage: {
-        width: 250, // Increase width by 5x
-        height: 250, // Increase height by 5x
+        width: 200, // Increase width by 5x
+        height: 200, // Increase height by 5x
         resizeMode: 'contain',
-        alignSelf:'center'
+        alignSelf: 'center'
     },
     descriptionText: {
         fontSize: 16, // Font size for description text
@@ -162,19 +238,33 @@ const styles = StyleSheet.create({
         color: 'black', // Default color for description text
         fontWeight: 'bold'
     },
-    
-  submitButton: {
-    backgroundColor: Colors.primaryColor,
-    borderRadius: 10,
-    paddingVertical: 10,
-    marginBottom: Sizes.fixPadding * 3,
-    alignItems: 'center',
-    paddingHorizontal:150,
-  },
-  submitButtonText: {
-    ...Fonts.whiteColor16Medium,
-    textAlign: 'center',
-  },
+
+    submitButton: {
+        backgroundColor: Colors.primaryColor,
+        borderRadius: 10,
+        paddingVertical: 10,
+        alignItems: 'center',
+        paddingHorizontal: 150,
+    },
+    submitButtonText: {
+        ...Fonts.whiteColor16Medium,
+        textAlign: 'center',
+    },
+    traitContainer: {
+        alignItems: 'center',
+        marginBottom: Sizes.fixPadding,
+    },
+    traitText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: Colors.blackColor,
+        marginBottom: Sizes.fixPadding / 2,
+    },
+    progressText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: Colors.primaryColor,
+    },
 });
 
 export default PredictionScreen;

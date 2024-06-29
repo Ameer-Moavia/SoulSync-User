@@ -5,6 +5,7 @@ import {
   FlatList,
   TextInput,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useState } from 'react';
 import { Text } from '../components/commonText';
@@ -18,7 +19,7 @@ const userMessages = [
   {
     id: '1',
     message:
-      'Hello, Samantha Smith!\n\nCongratulations!\nLorem ipsum dolor sit amet, consectetur\nadipiscing elit. Feugiat habitasse morbi elit\nullamcorper ipsum cras. Morbi pharetraeque\npulvinar venenatis potenti id parturient\ntristique.',
+      'Hello, Dear , Do You need help?. I am here for you. Please let me know how I can assist you today?',
     isSender: false,
   },
   {
@@ -31,6 +32,7 @@ const userMessages = [
 const MessageScreen = ({ navigation }) => {
   const [messagesList, setMessagesList] = useState(userMessages);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const API_KEY = "AIzaSyDoVKDEYFPv1Z5I7unogz6PVhAZtr2yylY";
   const genAI = new GoogleGenerativeAI(API_KEY);
 
@@ -50,28 +52,31 @@ const MessageScreen = ({ navigation }) => {
       isSender: true,
     };
 
-    // Update state with functional update
     setMessagesList(prevMessages => [...prevMessages, newMessage]);
+    setMessage('');
+    setLoading(true);
 
-    // Fetch generated response
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(message);
-    const response = result.response;
-    let generatedMessage = response.text();
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const result = await model.generateContent(message);
+      const response = result.response;
+      const generatedMessage = response.text();
 
-    // Remove double asterisks and make headings bold
+      const generatedResponse = {
+        id: newMessage.id + 1,
+        message: generatedMessage,
+        messageTime: `${displayHour}:${displayMinute} ${AmPm}`,
+        isSender: false,
+      };
 
-    const generatedResponse = {
-      id: newMessage.id + 1,
-      message: generatedMessage,
-      messageTime: `${displayHour}:${displayMinute} ${AmPm}`,
-      isSender: false,
-    };
-
-    // Update state with generated response
-setMessagesList(prevMessages => [...prevMessages, generatedResponse]);
+      setMessagesList(prevMessages => [...prevMessages, generatedResponse]);
+    } catch (error) {
+      console.error('Error generating message:', error);
+    } finally {
+      setLoading(false);
+    }
   }
-  
+
   return (
     <KeyboardAvoidingView
       behavior="height"
@@ -119,7 +124,6 @@ setMessagesList(prevMessages => [...prevMessages, generatedResponse]);
   function renderMessages() {
     const renderItem = ({ item }) => {
       return (
-      
         <View
           style={{
             alignItems: item.isSender ? 'flex-end' : 'flex-start',
@@ -147,6 +151,9 @@ setMessagesList(prevMessages => [...prevMessages, generatedResponse]);
     };
     return (
       <View style={{ flex: 1 }}>
+        {loading && (
+          <ActivityIndicator size="large" color={Colors.primaryColor} />
+        )}
         <FlatList
           inverted
           data={messagesList}
@@ -183,7 +190,6 @@ setMessagesList(prevMessages => [...prevMessages, generatedResponse]);
           onPress={() => {
             if (message != '') {
               addMessage({ message: message });
-              setMessage('');
             }
           }}
         />

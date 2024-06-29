@@ -12,6 +12,7 @@ import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import CustomButton from "../components/CustomButton";    
+import MyStatusBar from '../components/myStatusBar';
 import AppointmentBookingScreen from "./AppointmentBookingScreen";
 
 import { Colors, Fonts, Sizes, screenWidth } from '../constants/styles';    
@@ -28,6 +29,7 @@ const DoctorDetailsScreen = ({ route }) => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+    <MyStatusBar backgroundColor={Colors.primaryColor} barStyle="light-content" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {!doctor ? (
           <View style={styles.noDataContainer}>
@@ -124,7 +126,11 @@ const DoctorDetailsScreen = ({ route }) => {
             </View>
 
             {/* Button to Book an Appointment */}
-            <View style={styles.buttonContainer}>
+            
+          </>
+        )}
+      </ScrollView>
+      <View style={styles.buttonContainer}>
               <TouchableOpacity
                style={styles.bookAppointmentButton} 
                 onPress={()=>{navigation.navigate('AppointmentBookingScreen',{doctor}); }}>
@@ -132,9 +138,6 @@ const DoctorDetailsScreen = ({ route }) => {
               </TouchableOpacity>
 
             </View>
-          </>
-        )}
-      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -148,7 +151,6 @@ const styles = StyleSheet.create({
   topContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
   },
   doctorImage: {
     width: "100%",
@@ -158,12 +160,12 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
   },
   doctorName: {
-    paddingTop: 10,
+    paddingTop: 5,
     fontSize: 25,
     fontWeight: "bold",
   },
   middleContainer: {
-    padding: 10,
+    padding: 5,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
@@ -177,7 +179,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     padding: 10,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 5,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "column",
@@ -247,15 +249,14 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
-    padding: 10,
+marginHorizontal:10,
+marginBottom: 10,
   },
   bookAppointmentButton: {
     backgroundColor: Colors.primaryColor,
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    marginVertical: 20,
     width: "100%",
   },
   bookAppointmentText: {

@@ -85,24 +85,23 @@ const Home = () => {
   };
 
   const navigation = useNavigation('BottomTab');
-  
+
   const renderItemWithShimmer = () => (
-    <ShimmerPlaceholder style={styles.tipsItemContainer} shimmerColors={['black','white','black']}>
-    <ShimmerPlaceholder style={styles.tipsItemTitle} shimmerColors={['black','white','black']}></ShimmerPlaceholder>
-    <ShimmerPlaceholder style={styles.tipsItemDetail}shimmerColors={['black','white','black']}></ShimmerPlaceholder>
-  </ShimmerPlaceholder>
+    <ShimmerPlaceholder style={styles.tipsItemContainer} shimmerColors={['black', 'white', 'black']}>
+      <ShimmerPlaceholder style={styles.tipsItemTitle} shimmerColors={['black', 'white', 'black']}></ShimmerPlaceholder>
+      <ShimmerPlaceholder style={styles.tipsItemDetail} shimmerColors={['black', 'white', 'black']}></ShimmerPlaceholder>
+    </ShimmerPlaceholder>
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.whiteColor }}>
       <MyStatusBar />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-           <ShimmerPlaceholder style={{width:180,height:100,borderRadius:10}}>
-  </ShimmerPlaceholder>
         {header()}
         {searchField()}
         {banner()}
@@ -165,7 +164,7 @@ const Home = () => {
       <View style={styles.headerWrapStyle}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <Image
-            source={require('../assets/user1.jpeg')}
+            source={{uri:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTet-jk67T6SYdHW04eIMLygHzEeJKobi9zdg&usqp=CAU'}}
             style={styles.userCircleImage}
           />
           <View
@@ -182,7 +181,7 @@ const Home = () => {
                 ...Fonts.grayColor16Regular,
                 marginTop: Sizes.fixPadding - 5.0,
               }}>
-              Good Morning
+              Welcome!, Have a Nice Day
             </Text>
           </View>
         </View>
@@ -280,7 +279,6 @@ const Home = () => {
               <Text style={styles.tipsItemDetail}>{item.detail}</Text>
             </View>
           )}
-          ListFooterComponent={loading ? renderItemWithShimmer : null}
         />
       </View>
     );
@@ -335,7 +333,6 @@ const styles = StyleSheet.create({
     marginHorizontal: Sizes.fixPadding * 2.0,
     marginVertical: Sizes.fixPadding * 3.0,
     elevation: 3.0,
-    shadowColor: Colors.pinkColor,
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
@@ -467,7 +464,7 @@ const styles = StyleSheet.create({
   professionalsList: {
     marginTop: 0,
     marginLeft: 20,
-    marginBottom:10,
+    marginBottom: 10,
   },
   header: {
     flexDirection: 'row',
@@ -486,7 +483,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     overflow: 'hidden',
     marginBottom: 10,
-    borderColor:Colors.primaryColor,
+    borderColor: Colors.primaryColor,
     borderWidth: 2,
   },
   professionalsItemImage: {

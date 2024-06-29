@@ -8,7 +8,8 @@ import { Colors, CommonStyles, Fonts, Sizes } from '../constants/styles';
 
 
 const Settings = () => {
-  const navigation = useNavigation();
+    const navigation = useNavigation();
+  
 
   return (
     <>

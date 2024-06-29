@@ -2,6 +2,10 @@
   "expo": {
     "name": "locofy-react-native-project",
     "slug": "locofy-react-native-project",
+    "developmentClient": {
+      "packagerPort": 19001,
+      "minify": false
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,13 +22,24 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need your permission to use the camera",
+        "NSMicrophoneUsageDescription": "We need your permission to use the microphone"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "INTERNET",
+        "MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.anonymous.locofyreactnativeproject"
     },
     "web": {
       "favicon": "./assets/favicon.png"

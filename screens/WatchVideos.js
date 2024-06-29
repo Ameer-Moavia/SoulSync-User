@@ -4,17 +4,19 @@ import { AntDesign } from '@expo/vector-icons'; // Assuming you're using Expo fo
 import { Colors, Fonts, Sizes } from '../constants/styles'; // Import your custom styles
 import MyStatusBar from "../components/myStatusBar";
 const categories = [
-  { id: '1', title: 'To overcome Depression' },
-  { id: '2', title: 'To overcome Anxiety' },
-  { id: '3', title: 'Stress Management' },
-  { id: '4', title: 'Personal Growth' },
+  { id: '1', title: 'Anger Control',  press:'AngerControl' },
+  { id: '2', title: 'Overcome Anxiety',  press:'Anxiety' },
+  { id: '3', title: 'Stress Management',  press:'Stress' },
+  { id: '4', title: 'Overcome Depression',  press:'Depression' },
+  { id: '5', title: 'Overcome Procrastination',  press:'Procrastination' },
+  { id: '6', title: 'Cure From Panic Attacks',  press:'PanicAttack'},
 ];
 
 const WatchVideos = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.itemContainer}
-      onPress={() => navigation.navigate('VideoList', { title: item.title })}
+      onPress={() => navigation.navigate(item.press, { title: item.title })}
     >
       <Text style={styles.itemText}>{item.title}</Text>
       <AntDesign name="play" size={24} color="#FFFFFF" />
